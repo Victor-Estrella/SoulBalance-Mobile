@@ -1,8 +1,8 @@
 export const palette = {
   black: '#1A1A1A',
   blue: '#0066CC',
-  // Replace previous purple with dark blue to align with the new palette
-  purple: '#0D2E52',
+  // Revert: restore original purple accent
+  purple: '#9B4DFF',
   gray800: '#222326',
   gray600: '#2E2F33',
   gray400: '#46474D',
@@ -32,10 +32,11 @@ export const theme = {
     white: palette.white
   },
   gradients: {
-    hero: ['#0D2E52', '#0D2E52'],
+    // Optional: keep hero gradient dark with subtle purple tint
+    hero: ['#1A1A1A', '#202028'],
     card: ['#202028', '#1A1A1F'],
-    // Use dark to medium blue for accent gradient
-    accent: ['#0D2E52', '#0066CC']
+    // Restore purple-to-blue accent gradient
+    accent: ['#9B4DFF', '#0066CC']
   },
   spacing: (factor: number) => factor * 8,
   radius: {

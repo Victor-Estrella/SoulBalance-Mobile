@@ -1,5 +1,6 @@
 import { DailyPlan, DailyPlanItem, GenerativeInterpretation, NarrativeReport, WellbeingEntry, Recommendation } from '../model/types';
 import { uid } from '../utils/validators';
+import { postAjusteIA } from '../fetcher/ai';
 
 export function interpretState(entries: WellbeingEntry[]): GenerativeInterpretation {
   const latest = entries[0];
@@ -35,14 +36,20 @@ export function generateNarrative(entries: WellbeingEntry[]): NarrativeReport {
   return { periodo, resumo };
 }
 
-export function aiRecommendations(entries: WellbeingEntry[]): Recommendation[] {
-  const interp = interpretState(entries);
-  const recs: Omit<Recommendation, 'id' | 'userId' | 'createdAt'>[] = [];
-  if (interp.status_curto === 'em alerta') {
-    recs.push({ category: 'rest', message: 'Intervalo guiado de respiração 5m.', score: 0.95 });
-  }
-  if (interp.status_curto === 'em alta') {
-    recs.push({ category: 'productivity', message: 'Aproveite para um bloco de foco profundo.', score: 0.8 });
-  }
-  return recs.map(r => ({ ...r, id: uid(), userId: 'ai', createdAt: new Date().toISOString() }));
+export async function aiRecommendations(entries: WellbeingEntry[]): Promise<Recommendation[]> {
+  const latest = entries[0];
+  const payload = {
+    recoveryStatus: latest ? latest.energy : 5,
+    perceivedFatigue: latest ? (6 - latest.energy) : 4,
+    focusLevel: latest ? latest.focus : 5,
+    sleepHours: latest?.sleepHours ?? 6,
+    mainTask: 'Bloco principal do dia'
+  };
+  const resposta = await postAjusteIA(payload);
+  const base: { category: 'rest' | 'focus' | 'health' | 'learning' | 'productivity'; message: string; score: number }[] = [];
+  if (resposta.ajusteCarga) base.push({ category: 'productivity', message: resposta.ajusteCarga, score: 0.7 });
+  (resposta.recomendacoesAutocuidado || []).forEach((rec, i) => base.push({ category: 'health', message: rec, score: 0.6 - i * 0.05 }));
+  // Adiciona recomendação diagnóstica prioritária
+  base.unshift({ category: 'focus', message: `Diagnóstico: ${resposta.diagnostico}`, score: 0.99 });
+  return base.map(r => ({ ...r, id: uid(), userId: 'ai', origin: 'ai', createdAt: new Date().toISOString() }));
 }

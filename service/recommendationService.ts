@@ -4,7 +4,7 @@ import { uid } from '../utils/validators';
 
 type BareRec = Omit<Recommendation, 'id' | 'userId' | 'createdAt'>;
 
-export function buildRecommendations(userId: string, entries: WellbeingEntry[], metrics: FatigueMetrics): Recommendation[] {
+export async function buildRecommendations(userId: string, entries: WellbeingEntry[], metrics: FatigueMetrics): Promise<Recommendation[]> {
   const list: BareRec[] = [];
   if (metrics.fatigueIndex > 60) {
     list.push(msg('rest', 'Reduza duração das tarefas e faça uma pausa breve.', 0.9));
@@ -21,8 +21,13 @@ export function buildRecommendations(userId: string, entries: WellbeingEntry[], 
   if (!entries.length) {
     list.push(msg('focus', 'Faça seu primeiro check-in de humor/energia/foco.', 1));
   }
-  const ruleBased = list.map(r => ({ ...r, id: uid(), userId, createdAt: new Date().toISOString() }));
-  const aiBased = aiRecommendations(entries).map(r => ({ ...r, userId }));
+  const ruleBased = list.map(r => ({ ...r, id: uid(), userId, origin: 'rule', createdAt: new Date().toISOString() }));
+  let aiBased: Recommendation[] = [];
+  try {
+    aiBased = (await aiRecommendations(entries)).map(r => ({ ...r, userId }));
+  } catch (e) {
+    // Fallback: mantém apenas ruleBased se IA falhar
+  }
   return [...aiBased, ...ruleBased].sort((a,b) => b.score - a.score);
 }
 

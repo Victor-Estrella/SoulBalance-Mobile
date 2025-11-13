@@ -8,10 +8,19 @@ export function useRecommendations(userId: string, entries: WellbeingEntry[]) {
   const [recs, setRecs] = useState<Recommendation[]>([]);
 
   useEffect(() => {
-    const m = computeMetrics(entries);
-    setMetrics(m);
-    const r = buildRecommendations(userId, entries, m);
-    setRecs(r);
+    let cancelled = false;
+    const run = async () => {
+      const m = computeMetrics(entries);
+      setMetrics(m);
+      try {
+        const r = await buildRecommendations(userId, entries, m);
+        if (!cancelled) setRecs(r);
+      } catch {
+        if (!cancelled) setRecs([]);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
   }, [userId, entries]);
 
   return { metrics, recs };
