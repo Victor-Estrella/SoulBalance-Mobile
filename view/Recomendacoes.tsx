@@ -9,7 +9,7 @@ import { useTheme } from '../styles/ThemeContext';
 export default function Recomendacoes() {
   const { entries } = useWellbeing();
   const { session } = useAuth();
-  const { metrics, recs, isLoadingAI, aiRawText } = useRecommendations(session?.user.id || 'nouser', entries);
+  const { metrics, recs, isLoadingAI } = useRecommendations(session?.user.id || 'nouser', entries);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const aiRecs = useMemo(() => recs.filter(r => r.origin === 'ai'), [recs]);
   const ruleRecs = useMemo(() => recs.filter(r => r.origin !== 'ai'), [recs]);
@@ -78,23 +78,7 @@ export default function Recomendacoes() {
                         {idx + 1}. {stripMarkdown(r.message)}
                       </Text>
                     ))}
-                    {aiRawText && (
-                      <TouchableOpacity
-                        onPress={() => setShowFullReport(true)}
-                        style={{
-                          marginTop: theme.spacing(1),
-                          alignSelf: 'flex-start',
-                          paddingHorizontal: theme.spacing(1),
-                          paddingVertical: theme.spacing(0.5),
-                          borderRadius: theme.radius.md,
-                          backgroundColor: theme.colors.accent,
-                        }}
-                      >
-                        <Text style={{ color: theme.colors.buttonText, fontSize: theme.typography.sizes.xs }}>
-                          Ver relatório completo
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+                    {/* Botão de relatório completo pode ser reativado quando rawText estiver disponível */}
                   </View>
                 )}
               </View>
@@ -121,7 +105,7 @@ export default function Recomendacoes() {
         </View>
       )}
 
-      {showFullReport && aiRawText && (
+      {showFullReport && false && (
         <View
           style={{
             position: 'absolute',
@@ -159,7 +143,7 @@ export default function Recomendacoes() {
                 fontSize: theme.typography.sizes.xs,
               }}
             >
-              {stripMarkdown(aiRawText)}
+              {/* Conteúdo completo da IA entraria aqui */}
             </Text>
             <TouchableOpacity
               onPress={() => setShowFullReport(false)}
