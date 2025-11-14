@@ -38,10 +38,22 @@ export function generateNarrative(entries: WellbeingEntry[]): NarrativeReport {
 
 export async function aiRecommendations(entries: WellbeingEntry[]): Promise<Recommendation[]> {
   const latest = entries[0];
+  // Converte escala interna 1-5 para 0-10 (multiplicando por 2) e garante limites
+  const to010 = (v: number | undefined, fallback: number) => {
+    const base = (v ?? fallback) * 2; // 1->2 ... 5->10
+    return Math.min(10, Math.max(0, Math.round(base)));
+  };
+  // Fadiga percebida inversa: maior energia => menor fadiga. Internamente energia 1-5.
+  const perceivedFromEnergy = (energy: number | undefined, fallbackEnergy: number) => {
+    const e = energy ?? fallbackEnergy; // 1-5
+    const inv = (6 - e); // 5..1
+    const scaled = inv * 2; // 10..2
+    return Math.min(10, Math.max(0, Math.round(scaled)));
+  };
   const payload = {
-    recoveryStatus: latest ? latest.energy : 5,
-    perceivedFatigue: latest ? (6 - latest.energy) : 4,
-    focusLevel: latest ? latest.focus : 5,
+    recoveryStatus: to010(latest?.energy, 3),
+    perceivedFatigue: perceivedFromEnergy(latest?.energy, 3),
+    focusLevel: to010(latest?.focus, 3),
     sleepHours: latest?.sleepHours ?? 6,
     mainTask: 'Bloco principal do dia'
   };

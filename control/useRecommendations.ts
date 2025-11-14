@@ -6,6 +6,7 @@ import { buildRecommendations } from '../service/recommendationService';
 export function useRecommendations(userId: string, entries: WellbeingEntry[]) {
   const [metrics, setMetrics] = useState<FatigueMetrics>({ stressLevel: 0, recoveryIndex: 0, fatigueIndex: 0, focusTrend: 0 });
   const [recs, setRecs] = useState<Recommendation[]>([]);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -13,15 +14,18 @@ export function useRecommendations(userId: string, entries: WellbeingEntry[]) {
       const m = computeMetrics(entries);
       setMetrics(m);
       try {
+        setIsLoadingAI(true);
         const r = await buildRecommendations(userId, entries, m);
         if (!cancelled) setRecs(r);
       } catch {
         if (!cancelled) setRecs([]);
+      } finally {
+        if (!cancelled) setIsLoadingAI(false);
       }
     };
     run();
     return () => { cancelled = true; };
   }, [userId, entries]);
 
-  return { metrics, recs };
+  return { metrics, recs, isLoadingAI };
 }
