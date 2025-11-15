@@ -1,6 +1,6 @@
 import { uid } from '../utils/validators';
 import { AuthSession, User } from '../model/types';
-import { storage } from './storage';
+import { storage } from './storageService';
 import { postLogin, postSignup, postUpdateUser } from '../fetcher/auth';
 
 const SESSION_KEY = 'session_v1';

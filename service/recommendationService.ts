@@ -21,12 +21,12 @@ export async function buildRecommendations(userId: string, entries: WellbeingEnt
   if (!entries.length) {
     list.push(msg('focus', 'Faça seu primeiro check-in de humor/energia/foco.', 1));
   }
-  const ruleBased = list.map(r => ({ ...r, id: uid(), userId, origin: 'rule', createdAt: new Date().toISOString() }));
+  const ruleBased: Recommendation[] = list.map(r => ({...r, id: uid(), userId, origin: 'rule' as const, createdAt: new Date().toISOString(),}));
   let aiBased: Recommendation[] = [];
   try {
-    aiBased = (await aiRecommendations(entries)).map(r => ({ ...r, userId }));
+    aiBased = (await aiRecommendations(entries)).map(r => ({ ...r, userId, origin: 'ai' as const }));
   } catch (e) {
-    // Fallback: mantém apenas ruleBased se IA falhar
+    aiBased = [];
   }
   return [...aiBased, ...ruleBased].sort((a,b) => b.score - a.score);
 }

@@ -1,6 +1,6 @@
 import { DailyPlan, DailyPlanItem, GenerativeInterpretation, NarrativeReport, WellbeingEntry, Recommendation } from '../model/types';
 import { uid } from '../utils/validators';
-import { postAjusteIA } from '../fetcher/ai';
+import { postAjusteIA } from '../fetcher/aiFetcher';
 
 export function interpretState(entries: WellbeingEntry[]): GenerativeInterpretation {
   const latest = entries[0];
