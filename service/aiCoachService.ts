@@ -1,8 +1,10 @@
-import { DailyPlan, DailyPlanItem, GenerativeInterpretation, NarrativeReport, WellbeingEntry, Recommendation } from '../model/types';
+import { DailyPlan, DailyPlanItem, GenerativeInterpretation, NarrativeReport } from '../model/generative';
+import { EntradaBemEstar } from '../model/wellbeing';
+import { Recommendation } from '../model/recommendation';
 import { uid } from '../utils/validators';
 import { postAjusteIA } from '../fetcher/aiFetcher';
 
-export function interpretState(entries: WellbeingEntry[]): GenerativeInterpretation {
+export function interpretState(entries: EntradaBemEstar[]): GenerativeInterpretation {
   const latest = entries[0];
   if (!latest) return { status_curto: 'estável', competencias: [], mensagem: 'Faça seu primeiro check-in para começarmos.' };
   const score = latest.mood + latest.energy + latest.focus; // 3..15
@@ -12,7 +14,7 @@ export function interpretState(entries: WellbeingEntry[]): GenerativeInterpretat
   return { status_curto: 'estável', competencias: ['equilíbrio'], mensagem: 'Bom ritmo. Mantenha alternância entre foco e pausas.' };
 }
 
-export function generateDailyPlan(entries: WellbeingEntry[]): DailyPlan {
+export function generateDailyPlan(entries: EntradaBemEstar[]): DailyPlan {
   const items: DailyPlanItem[] = [];
   const latest = entries[0];
   const today = new Date().toISOString().slice(0,10);
@@ -30,13 +32,13 @@ export function generateDailyPlan(entries: WellbeingEntry[]): DailyPlan {
   return { dataISO: today, itens: items };
 }
 
-export function generateNarrative(entries: WellbeingEntry[]): NarrativeReport {
+export function generateNarrative(entries: EntradaBemEstar[]): NarrativeReport {
   const periodo: NarrativeReport['periodo'] = 'semanal';
   const resumo = 'Você manteve um bom equilíbrio entre esforço e recuperação. Houve melhora gradual no foco.';
   return { periodo, resumo };
 }
 
-export async function aiRecommendations(entries: WellbeingEntry[]): Promise<Recommendation[]> {
+export async function aiRecommendations(entries: EntradaBemEstar[]): Promise<Recommendation[]> {
   const latest = entries[0];
   // Converte escala interna 1-5 para 0-10 (multiplicando por 2) e garante limites
   const to010 = (v: number | undefined, fallback: number) => {

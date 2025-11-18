@@ -1,6 +1,7 @@
-import { WellbeingEntry, FatigueMetrics } from '../model/types';
+import { EntradaBemEstar } from '../model/wellbeing';
+import { FatigueMetrics } from '../model/metrics';
 
-export function computeMetrics(entries: WellbeingEntry[]): FatigueMetrics {
+export function computeMetrics(entries: EntradaBemEstar[]): FatigueMetrics {
   if (!entries.length) {
     return { stressLevel: 0, recoveryIndex: 0, fatigueIndex: 0, focusTrend: 0 };
   }

@@ -5,15 +5,13 @@ import { useTheme } from '../styles/ThemeContext';
 import { useWellbeing } from '../contexto/WellbeingContext';
 import { useLogs } from '../contexto/LogContext';
 import { useAuth } from '../contexto/AuthContext';
-import { clearEntries } from '../service/wellbeingService';
-import { clearLogs } from '../service/logService';
 import PrimaryButton from './components/ui/PrimaryButton';
 import { Feather } from '@expo/vector-icons';
 
 export default function Configuracao() {
   const { theme } = useTheme();
-  const { entries, refresh: refreshWellbeing, simulate } = useWellbeing();
-  const { logs } = useLogs();
+  const { entries, refresh: refreshWellbeing, simulate, clearAll: clearWellbeing } = useWellbeing();
+  const { logs, clearAll: clearLogsAll } = useLogs();
   const { session, updateUser } = useAuth();
   const [name, setName] = useState(session?.user.name ?? '');
   const [email, setEmail] = useState(session?.user.email ?? '');
@@ -23,7 +21,7 @@ export default function Configuracao() {
     if (!autoSimulate) return;
     const id = setInterval(() => {
       simulate();
-    }, 60000); // a cada 60s para demo
+    }, 60000);
     return () => clearInterval(id);
   }, [autoSimulate, simulate]);
 
@@ -32,8 +30,8 @@ export default function Configuracao() {
     Alert.alert('Limpar dados', 'Isso removerá seus check-ins e registros. Continuar?', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Remover', style: 'destructive', onPress: () => {
-        clearEntries(session.user.id);
-        clearLogs(session.user.id);
+        clearWellbeing();
+        clearLogsAll();
         refreshWellbeing();
       } }
     ]);

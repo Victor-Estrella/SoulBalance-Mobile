@@ -1,10 +1,12 @@
-import { Recommendation, WellbeingEntry, FatigueMetrics } from '../model/types';
+import { Recommendation } from '../model/recommendation';
+import { EntradaBemEstar } from '../model/wellbeing';
+import { FatigueMetrics } from '../model/metrics';
 import { aiRecommendations } from './aiCoachService';
 import { uid } from '../utils/validators';
 
 type BareRec = Omit<Recommendation, 'id' | 'userId' | 'createdAt'>;
 
-export async function buildRecommendations(userId: string, entries: WellbeingEntry[], metrics: FatigueMetrics): Promise<Recommendation[]> {
+export async function buildRecommendations(userId: string, entries: EntradaBemEstar[], metrics: FatigueMetrics): Promise<Recommendation[]> {
   const list: BareRec[] = [];
   if (metrics.fatigueIndex > 60) {
     list.push(msg('rest', 'Reduza duração das tarefas e faça uma pausa breve.', 0.9));

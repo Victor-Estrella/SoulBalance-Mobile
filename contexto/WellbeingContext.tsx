@@ -1,11 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { WellbeingEntry } from '../model/types';
-import { addManualEntry, simulateSensor, listEntries, clearEntries } from '../service/wellbeingService';
+import { EntradaBemEstar } from '../model/wellbeing';
 import { useAuth } from './AuthContext';
+import { salvarCheckin, carregarCheckins } from '../service/checkinService';
 
 interface WellbeingValue {
-  entries: WellbeingEntry[];
-  addCheckin: (data: Omit<WellbeingEntry, 'id' | 'createdAt' | 'source' | 'userId'>) => void;
+  entries: EntradaBemEstar[];
+  addCheckin: (data: Omit<EntradaBemEstar, 'id' | 'createdAt' | 'source' | 'userId'>) => void;
   simulate: () => void;
   refresh: () => void;
   clearAll: () => void;
@@ -15,32 +15,28 @@ const WellbeingContext = createContext<WellbeingValue>({ entries: [], addCheckin
 
 export const WellbeingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { session } = useAuth();
-  const [entries, setEntries] = useState<WellbeingEntry[]>([]);
+  const [entries, setEntries] = useState<EntradaBemEstar[]>([]);
 
   const refresh = useCallback(() => {
     if (!session) return;
-    setEntries(listEntries(session.user.id));
+    carregarCheckins().then(setEntries).catch(() => {});
   }, [session]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const addCheckin = useCallback((data: Omit<WellbeingEntry, 'id' | 'createdAt' | 'source' | 'userId'>) => {
+  const addCheckin = useCallback((data: Omit<EntradaBemEstar, 'id' | 'createdAt' | 'source' | 'userId'>) => {
     if (!session) return;
-    addManualEntry({ ...data, userId: session.user.id });
-    refresh();
+    salvarCheckin(data.mood, data.energy, data.focus)
+      .then(() => refresh())
+      .catch(() => {});
   }, [session, refresh]);
 
   const simulate = useCallback(() => {
-    if (!session) return;
-    simulateSensor(session.user.id);
-    refresh();
-  }, [session, refresh]);
+  }, []);
 
   const clearAll = useCallback(() => {
-    if (!session) return;
-    clearEntries(session.user.id);
     refresh();
-  }, [session, refresh]);
+  }, [refresh]);
 
   return (
     <WellbeingContext.Provider value={{ entries, addCheckin, simulate, refresh, clearAll }}>

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Recommendation, WellbeingEntry, FatigueMetrics } from '../model/types';
+import { Recommendation } from '../model/recommendation';
+import { EntradaBemEstar } from '../model/wellbeing';
+import { FatigueMetrics } from '../model/metrics';
 import { computeMetrics } from '../service/analyticsService';
 import { buildRecommendations } from '../service/recommendationService';
 
-export function useRecommendations(userId: string, entries: WellbeingEntry[]) {
+export function useRecommendations(userId: string, entries: EntradaBemEstar[]) {
   const [metrics, setMetrics] = useState<FatigueMetrics>({ stressLevel: 0, recoveryIndex: 0, fatigueIndex: 0, focusTrend: 0 });
   const [recs, setRecs] = useState<Recommendation[]>([]);
   const [isLoadingAI, setIsLoadingAI] = useState(false);

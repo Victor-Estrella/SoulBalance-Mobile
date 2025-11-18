@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { AuthSession, User } from '../model/types';
+import { AuthSession, User } from '../model/user';
 import { login as doLogin, signup as doSignup, logout as doLogout, getSession, updateUser as doUpdateUser } from '../service/authService';
 
 interface AuthContextValue {

@@ -5,7 +5,7 @@ import PrimaryButton from './components/ui/PrimaryButton';
 import { useTheme } from '../styles/ThemeContext';
 import { useLogs } from '../contexto/LogContext';
 import { Feather } from '@expo/vector-icons';
-import { TipoAtividade } from '../model/types';
+import { TipoAtividade } from '../model/atividade';
 
 export default function RegistroHoras() {
   const { addEntry, logs, totalWork, byType } = useLogs();
