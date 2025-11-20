@@ -4,17 +4,32 @@ import { Text, View, Switch, Pressable, Alert, TextInput } from 'react-native';
 import { useTheme } from '../styles/ThemeContext';
 import { useWellbeing } from '../contexto/WellbeingContext';
 import { useLogs } from '../contexto/LogContext';
-import { useAuth } from '../contexto/AuthContext';
 import PrimaryButton from './components/ui/PrimaryButton';
 import { Feather } from '@expo/vector-icons';
+import { useAuth } from '../contexto/AuthContext';
 
 export default function Configuracao() {
   const { theme } = useTheme();
   const { entries, refresh: refreshWellbeing, simulate, clearAll: clearWellbeing } = useWellbeing();
   const { logs, clearAll: clearLogsAll } = useLogs();
-  const { session, updateUser } = useAuth();
+  const { session, updateUser, deleteAccount } = useAuth();
+
+    const handleDeleteAccount = async () => {
+      if (!session) return;
+      Alert.alert('Excluir conta', 'Tem certeza que deseja excluir sua conta? Esta ação é irreversível.', [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Excluir', style: 'destructive', onPress: async () => {
+          try {
+            await deleteAccount();
+          } catch (e) {
+            Alert.alert('Erro', 'Não foi possível excluir a conta.');
+          }
+        } }
+      ]);
+    };
   const [name, setName] = useState(session?.user.name ?? '');
   const [email, setEmail] = useState(session?.user.email ?? '');
+  const [senha, setSenha] = useState('');
   const [autoSimulate, setAutoSimulate] = useState<boolean>(false);
 
   useEffect(() => {
@@ -43,7 +58,23 @@ export default function Configuracao() {
         <Text style={{ color: theme.colors.textPrimary, fontFamily: theme.typography.fontFamilyBold }}>Perfil</Text>
         <TextInput value={name} onChangeText={setName} placeholder="Nome" placeholderTextColor={theme.colors.textSecondary} style={{ marginTop: theme.spacing(1), backgroundColor: theme.colors.surfaceAlt, color: theme.colors.textPrimary, padding: theme.spacing(1), borderRadius: theme.radius.md }} />
         <TextInput value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="Email" placeholderTextColor={theme.colors.textSecondary} style={{ marginTop: theme.spacing(1), backgroundColor: theme.colors.surfaceAlt, color: theme.colors.textPrimary, padding: theme.spacing(1), borderRadius: theme.radius.md }} />
-        <PrimaryButton title="Salvar perfil" variant="solid" onPress={async () => { await updateUser({ name, email }); }} style={{ marginTop: theme.spacing(1.25) }} />
+        <TextInput value={senha} onChangeText={setSenha} placeholder="Senha (obrigatória para atualizar)" placeholderTextColor={theme.colors.textSecondary} secureTextEntry style={{ marginTop: theme.spacing(1), backgroundColor: theme.colors.surfaceAlt, color: theme.colors.textPrimary, padding: theme.spacing(1), borderRadius: theme.radius.md }} />
+        <PrimaryButton title="Salvar perfil" variant="solid" onPress={async () => {
+          if (!senha) {
+            Alert.alert('Atenção', 'Informe sua senha para atualizar o perfil.');
+            return;
+          }
+          try {
+            await updateUser({ name, email, senha });
+            Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+          } catch (e: any) {
+            Alert.alert('Erro', e?.message || 'Não foi possível atualizar o perfil.');
+          }
+        }} style={{ marginTop: theme.spacing(1.25) }} />
+        <Pressable onPress={handleDeleteAccount} style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing(1), marginTop: theme.spacing(2), paddingVertical: theme.spacing(0.75), paddingHorizontal: theme.spacing(1), borderRadius: theme.radius.md, backgroundColor: theme.colors.surfaceAlt }}>
+          <Feather name="user-x" size={16} color={theme.colors.danger} />
+          <Text style={{ color: theme.colors.danger }}>Excluir conta</Text>
+        </Pressable>
       </View>
 
       <View style={{ backgroundColor: theme.colors.surface, padding: theme.spacing(2), borderRadius: theme.radius.lg, marginBottom: theme.spacing(2) }}>

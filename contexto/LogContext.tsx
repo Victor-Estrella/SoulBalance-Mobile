@@ -21,11 +21,10 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const refresh = useCallback(() => {
     if (!session) return;
-    const userId = Number(session.user.id);
     const today = new Date();
     const inicio = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
     const fim = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-    carregarAtividadesPeriodo(userId, inicio.toISOString(), fim.toISOString())
+    carregarAtividadesPeriodo(inicio.toISOString(), fim.toISOString())
       .then(atividades => {
         const mapped: RegistroTrabalho[] = atividades.map(a => ({
           id: String(a.atividadeId),
@@ -50,7 +49,10 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => { refresh(); }, [refresh]);
 
   const addEntry = useCallback((data: Omit<RegistroTrabalho, 'id' | 'userId' | 'createdAt'>) => {
-    if (!session) return;
+    if (!session) {
+      console.log('Usuário não autenticado ao tentar registrar atividade.');
+      return;
+    }
     const now = new Date();
     const payload = {
       tipoAtividade: data.type as any,
@@ -58,11 +60,10 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fim: new Date(now.getTime() + data.durationMinutes * 60000).toISOString(),
       descricao: data.task,
     };
-    salvarAtividade(Number(session.user.id), payload).then(() => refresh()).catch(() => {});
+    salvarAtividade(payload).then(() => refresh()).catch(() => {});
   }, [session, refresh]);
 
   const clearAll = useCallback(() => {
-    // Sem endpoint específico de deleção de atividades; apenas limpa estado local
     setLogs([]);
     setTotal(0);
     setByType({});
@@ -79,12 +80,16 @@ export const useLogs = () => useContext(LogContext);
 
 function mapTipoAtividade(tipo: string): TipoAtividade {
   switch (tipo) {
-    case 'CREATIVE':
-    case 'SOFTSKILL':
-    case 'DEEPWORK':
-    case 'LEARNING':
+    case 'EXERCICIO_FISICO':
+    case 'TRABALHO_CRIATIVO':
+    case 'PAUSA_ATIVA':
+    case 'LAZER_SOCIAL':
+    case 'DESCANSO_PASSIVO':
+    case 'ESTUDO_APRENDIZADO':
+    case 'TRABALHO_FOCO':
+    case 'MEDITACAO_MINDFULNESS':
       return tipo as TipoAtividade;
     default:
-      return TipoAtividade.DEEPWORK;
+      return TipoAtividade.ESTUDO_APRENDIZADO;
   }
 }

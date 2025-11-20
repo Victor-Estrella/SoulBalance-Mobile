@@ -15,22 +15,34 @@ export default function Cadastro({ goLogin }: Props) {
   const [email, setEmail] = useState('demo@soul.app');
   const [password, setPassword] = useState('123456');
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
+  const [signupError, setSignupError] = useState<string | null>(null);
   return (
     <ScreenContainer title="Criar Conta" subtitle="Comece seu equilíbrio com a gente">
       <View style={{ backgroundColor: theme.colors.surface, padding: theme.spacing(2), borderRadius: theme.radius.lg }}>
         <FormField label="Nome" value={name} onChange={setName} placeholder="Seu nome" icon="user" error={errors.name} autoCapitalize="words" />
         <FormField label="Email" value={email} onChange={setEmail} placeholder="seu@email.com" icon="mail" keyboardType="email-address" error={errors.email} />
         <FormField label="Senha" value={password} onChange={setPassword} placeholder="••••••" secure icon="lock" error={errors.password} />
+        {signupError && (
+          <Text style={{ color: theme.colors.accent, marginBottom: theme.spacing(1), textAlign: 'center' }}>{signupError}</Text>
+        )}
         <PrimaryButton
           variant="gradient"
           title={loading ? 'Criando...' : 'Criar conta'}
-          onPress={() => {
+          onPress={async () => {
             const next: any = {};
             if (!name.trim()) next.name = 'Informe seu nome';
             if (!email.includes('@')) next.email = 'Email inválido';
             if (password.length < 6) next.password = 'Use ao menos 6 caracteres';
             setErrors(next);
-            if (Object.keys(next).length === 0) signup(name, email, password);
+            setSignupError(null);
+            if (Object.keys(next).length === 0) {
+              try {
+                await signup(name, email, password);
+                goLogin();
+              } catch (err: any) {
+                setSignupError('Erro ao criar conta. Tente novamente.');
+              }
+            }
           }}
         />
         <TouchableOpacity accessibilityRole="button" onPress={goLogin} style={{ marginTop: theme.spacing(2), alignSelf: 'center' }}>

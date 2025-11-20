@@ -23,7 +23,7 @@ function scoreToEnum(s: number): ValorEnum {
 function mapCheckinToEntry(dto: CheckinManualResponse): EntradaBemEstar {
     return {
         id: String(dto.chekinId),
-        userId: String(dto.usuario.userId),
+        userId: String(dto.usuarioId),
         mood: enumToScore(dto.humor),
         energy: enumToScore(dto.energia),
         focus: enumToScore(dto.foco),
@@ -38,7 +38,9 @@ export async function salvarCheckin(mood: number, energy: number, focus: number)
         energia: scoreToEnum(energy),
         foco: scoreToEnum(focus),
     };
+    console.log('[checkinService] salvarCheckin - body:', body);
     const dto = await postCheckinManual(body);
+    console.log('[checkinService] salvarCheckin - dto:', dto);
     return mapCheckinToEntry(dto);
 }
 

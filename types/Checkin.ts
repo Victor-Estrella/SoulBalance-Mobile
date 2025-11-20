@@ -12,7 +12,5 @@ export interface CheckinManualResponse {
     energia: ValorEnum;
     foco: ValorEnum;
     time: string;
-    usuario: {
-        userId: number;
-    };
+    usuarioId: number;
 }

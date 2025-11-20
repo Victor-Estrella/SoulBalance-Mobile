@@ -1,13 +1,13 @@
 import { api } from './http';
-import { AtividadeRequest, AtividadeResponse, TipoAtividade } from '../types/Atividade';
+import { AtividadeRequest, AtividadeResponse } from '../types/Atividade';
 
-export async function postAtividade(userId: number, data: AtividadeRequest): Promise<AtividadeResponse> {
-  const res = await api.post<AtividadeResponse>(`/atividade/users/${userId}/atividades`, data);
+export async function postAtividade(data: AtividadeRequest): Promise<AtividadeResponse> {
+  const res = await api.post<AtividadeResponse>(`/atividade/atividades`, data);
   return res.data;
 }
 
-export async function listarAtividadesPeriodo(userId: number, inicio: string, fim: string): Promise<AtividadeResponse[]> {
-  const res = await api.get<AtividadeResponse[]>(`/atividade/users/${userId}/atividades/historico`, { params: { inicio, fim } });
+export async function listarAtividadesPeriodo(inicio: string, fim: string): Promise<AtividadeResponse[]> {
+  const res = await api.get<AtividadeResponse[]>(`/atividade/atividades/historico`, { params: { inicio, fim } });
   return res.data;
 }
 

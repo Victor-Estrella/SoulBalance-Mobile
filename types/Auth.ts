@@ -25,4 +25,5 @@ export interface SignupRequest {
 export interface UpdateUserRequest {
     name?: string;
     email?: string;
+    senha?: string;
 }

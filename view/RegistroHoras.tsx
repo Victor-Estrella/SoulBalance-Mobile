@@ -12,11 +12,11 @@ export default function RegistroHoras() {
   const { theme } = useTheme();
   const [task, setTask] = useState('Tarefa');
   const [duration, setDuration] = useState('30');
-  const [type, setType] = useState<TipoAtividade>(TipoAtividade.DEEPWORK);
+  const [type, setType] = useState<TipoAtividade>(TipoAtividade.DESCANSO_PASSIVO);
   const quicks = [
-    { label: 'Focus 25m', task: 'Deep Focus', duration: '25', type: TipoAtividade.DEEPWORK },
-    { label: 'Revisão 15m', task: 'Code Review', duration: '15', type: TipoAtividade.CREATIVE },
-    { label: 'Estudo 40m', task: 'Learning', duration: '40', type: TipoAtividade.LEARNING },
+    { label: 'Focus 25m', task: 'Deep Focus', duration: '25', type: TipoAtividade.TRABALHO_FOCO },
+    { label: 'Criativo 15m', task: 'Creative Code', duration: '15', type: TipoAtividade.TRABALHO_CRIATIVO },
+    { label: 'Estudo 40m', task: 'Learning', duration: '40', type: TipoAtividade.ESTUDO_APRENDIZADO },
   ];
   return (
     <ScreenContainer title="Registro de Horas">
@@ -25,9 +25,9 @@ export default function RegistroHoras() {
         <TextInput value={task} onChangeText={setTask} style={{ backgroundColor: theme.colors.surfaceAlt, color: theme.colors.textPrimary, padding: theme.spacing(1), borderRadius: theme.radius.sm, marginBottom: theme.spacing(1) }} placeholder="Tarefa" placeholderTextColor={theme.colors.textSecondary} />
         <TextInput value={duration} keyboardType="numeric" onChangeText={setDuration} style={{ backgroundColor: theme.colors.surfaceAlt, color: theme.colors.textPrimary, padding: theme.spacing(1), borderRadius: theme.radius.sm, marginBottom: theme.spacing(1) }} placeholder="Minutos" placeholderTextColor={theme.colors.textSecondary} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing(1), marginBottom: theme.spacing(1) }}>
-          {[TipoAtividade.CREATIVE, TipoAtividade.SOFTSKILL, TipoAtividade.DEEPWORK, TipoAtividade.LEARNING].map(t => (
+          {[ TipoAtividade.TRABALHO_FOCO, TipoAtividade.EXERCICIO_FISICO, TipoAtividade.PAUSA_ATIVA, TipoAtividade.LAZER_SOCIAL, TipoAtividade.TRABALHO_CRIATIVO, TipoAtividade.DESCANSO_PASSIVO, TipoAtividade.ESTUDO_APRENDIZADO,  TipoAtividade.MEDITACAO_MINDFULNESS ].map(t => (
             <TouchableOpacity key={t} onPress={() => setType(t)} style={{ paddingVertical: theme.spacing(0.75), paddingHorizontal: theme.spacing(2), borderWidth: 1, borderColor: type === t ? theme.colors.accent : theme.colors.border, backgroundColor: type === t ? theme.colors.accent : 'transparent', borderRadius: theme.radius.pill }}>
-              <Text style={{ color: type === t ? theme.colors.white : theme.colors.textSecondary, fontSize: theme.typography.sizes.sm }}>{t.toLowerCase() }</Text>
+              <Text style={{ color: type === t ? theme.colors.white : theme.colors.textSecondary, fontSize: theme.typography.sizes.sm }}>{t.replace(/_/g, ' ').toLowerCase()}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -47,7 +47,12 @@ export default function RegistroHoras() {
       {logs.slice(0,10).map(l => (
         <View key={l.id} style={{ padding: theme.spacing(1), marginBottom: theme.spacing(1), backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radius.sm }}>
           <Text style={{ color: theme.colors.textPrimary }}>{l.task} • {l.durationMinutes}m • {l.type}</Text>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: theme.typography.sizes.xs }}>{new Date(l.createdAt).toLocaleTimeString()}</Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: theme.typography.sizes.xs }}>
+            {(() => {
+              const d = new Date(l.createdAt);
+              return isNaN(d.getTime()) ? '-' : d.toLocaleTimeString();
+            })()}
+          </Text>
         </View>
       ))}
     </ScreenContainer>

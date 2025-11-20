@@ -1,58 +1,51 @@
-import { uid } from '../utils/validators';
-import { AuthSession, User } from '../model/user';
+
+
+import { AuthSession } from '../model/user';
 import { storage } from './storageService';
-import { postLogin, postSignup, postUpdateUser } from '../fetcher/auth';
-import { AuthSessionRemote } from '../types/Auth';
+import { postLogin, postSignup, postUpdateUser, deleteUser, buscarUsuarioPorEmail } from '../fetcher/auth';
+import { UsuarioResponse } from '../types/Usuario';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const TOKEN_KEY = 'auth_token';
+
+async function setToken(token: string) { await AsyncStorage.setItem(TOKEN_KEY, token); }
+async function removeToken() { await AsyncStorage.removeItem(TOKEN_KEY); }
 
 const SESSION_KEY = 'session_v1';
-const REMOTE_ENABLED = !!(process.env.EXPO_PUBLIC_API_BASE_URL);
 
-export async function signup(name: string, email: string, password: string): Promise<AuthSession> {
-  if (REMOTE_ENABLED) {
-    const remote: AuthSessionRemote = await postSignup({ name, email, password });
-    const session: AuthSession = {
-      token: remote.token,
-      user: {
-        id: String(remote.user.id),
-        name: remote.user.name,
-        email: remote.user.email,
-        createdAt: remote.user.createdAt,
-      },
-      expiresAt: remote.expiresAt,
-    };
-    await storage.setItem(SESSION_KEY, JSON.stringify(session));
-    return session;
-  }
-  // Fallback local (simulado)
-  const user: User = { id: uid(), name, email, createdAt: new Date().toISOString() };
-  const session: AuthSession = {
-    token: uid(),
-    user,
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString()
-  };
-  await storage.setItem(SESSION_KEY, JSON.stringify(session));
-  return session;
+// Novo fluxo: apenas cadastra o usuário, sem login automático
+export async function signup(name: string, email: string, password: string): Promise<UsuarioResponse> {
+  // Cria o usuário (não retorna token)
+  const user: UsuarioResponse = await postSignup({ name, email, password });
+  // O frontend deve redirecionar para a tela de login após o cadastro
+  return user;
 }
 
-export async function login(email: string, password: string): Promise<AuthSession | null> {
-  const stored = await storage.getItem(SESSION_KEY);
-  if (stored) return JSON.parse(stored);
-  if (REMOTE_ENABLED) {
-    const remote: AuthSessionRemote = await postLogin({ email, password });
+export async function login(email: string, password: string): Promise<AuthSession> {
+    // Faz login e busca o usuário pelo email para obter o id
+    const loginResult = await postLogin({ email, password });
+    await setToken(loginResult.token);
+    // Busca o usuário pelo email para obter id, nome, etc
+    let usuario = null;
+    try {
+      usuario = await buscarUsuarioPorEmail(email);
+    } catch (e) {
+      // Se não encontrar, salva sessão sem id
+      usuario = null;
+    }
     const session: AuthSession = {
-      token: remote.token,
+      token: loginResult.token,
       user: {
-        id: String(remote.user.id),
-        name: remote.user.name,
-        email: remote.user.email,
-        createdAt: remote.user.createdAt,
+        id: usuario?.userId ? String(usuario.userId) : '',
+        name: usuario?.nome || '',
+        email: usuario?.email || email,
+        createdAt: usuario?.dataCriacao || '',
       },
-      expiresAt: remote.expiresAt,
+      expiresAt: null,
     };
     await storage.setItem(SESSION_KEY, JSON.stringify(session));
     return session;
-  }
-  return signup(email.split('@')[0], email, password);
 }
 
 export async function getSession(): Promise<AuthSession | null> {
@@ -62,27 +55,59 @@ export async function getSession(): Promise<AuthSession | null> {
 
 export async function logout(): Promise<void> {
   await storage.removeItem(SESSION_KEY);
+  await removeToken();
 }
 
-export async function updateUser(updates: Partial<Pick<User, 'name' | 'email'>>): Promise<AuthSession | null> {
+export async function updateUser(updates: { name?: string; email?: string; senha?: string }): Promise<AuthSession> {
   const stored = await storage.getItem(SESSION_KEY);
   if (!stored) return null;
-  const session: AuthSession = JSON.parse(stored);
-  if (REMOTE_ENABLED) {
-    const updatedUser = await postUpdateUser(session.token, { name: updates.name, email: updates.email });
-    const next: AuthSession = {
-      ...session,
-      user: {
-        id: String(updatedUser.userId),
-        name: updatedUser.nome,
-        email: updatedUser.email,
-        createdAt: session.user.createdAt,
-      },
-    };
-    await storage.setItem(SESSION_KEY, JSON.stringify(next));
-    return next;
+  let session: AuthSession = JSON.parse(stored);
+  let userId = session.user?.id;
+  // Se não houver id na sessão, tenta buscar pelo email
+  if (!userId && session.user?.email) {
+    try {
+      const usuario = await buscarUsuarioPorEmail(session.user.email);
+      if (usuario && usuario.userId) {
+        userId = String(usuario.userId);
+        session.user.id = userId;
+      }
+    } catch (e) {
+      throw new Error('ID do usuário não encontrado na sessão!');
+    }
   }
-  const next: AuthSession = { ...session, user: { ...session.user, ...updates } };
+  if (!userId) throw new Error('ID do usuário não encontrado na sessão!');
+  const updatedUser = await postUpdateUser(String(userId), { name: updates.name, email: updates.email, senha: updates.senha });
+  const next: AuthSession = {
+    ...session,
+    user: {
+      id: String(updatedUser.userId),
+      name: updatedUser.nome,
+      email: updatedUser.email,
+      createdAt: session.user.createdAt,
+    },
+  };
   await storage.setItem(SESSION_KEY, JSON.stringify(next));
   return next;
+}
+
+export async function deleteAccount(): Promise<void> {
+  const stored = await storage.getItem(SESSION_KEY);
+  if (!stored) throw new Error('Sessão não encontrada.');
+  let session: AuthSession = JSON.parse(stored);
+  let userId = session.user?.id;
+  // Se não houver id na sessão, tenta buscar pelo email
+  if (!userId && session.user?.email) {
+    try {
+      const usuario = await buscarUsuarioPorEmail(session.user.email);
+      if (usuario && usuario.userId) {
+        userId = String(usuario.userId);
+        session.user.id = userId;
+      }
+    } catch (e) {
+      throw new Error('ID do usuário não encontrado na sessão.');
+    }
+  }
+  if (!userId) throw new Error('ID do usuário não encontrado na sessão.');
+  await deleteUser(String(userId));
+  await logout();
 }

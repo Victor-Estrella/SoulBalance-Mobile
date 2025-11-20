@@ -9,7 +9,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (updates: Partial<Pick<User, 'name' | 'email'>>) => Promise<void>;
+  updateUser: (updates: { name?: string; email?: string; senha?: string }) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -19,7 +20,8 @@ const AuthContext = createContext<AuthContextValue>({
   login: async () => {},
   signup: async () => {},
   logout: async () => {},
-  updateUser: async () => {}
+  updateUser: async () => {},
+  deleteAccount: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -39,8 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = useCallback(async (name: string, email: string, password: string) => {
     setLoading(true);
-    const s = await doSignup(name, email, password);
-    setSession(s);
+    await doSignup(name, email, password);
     setLoading(false);
   }, []);
 
@@ -51,15 +52,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
-  const updateUser = useCallback(async (updates: Partial<Pick<User, 'name' | 'email'>>) => {
+  const updateUser = useCallback(async (updates: { name?: string; email?: string; senha?: string }) => {
     setLoading(true);
     const s = await doUpdateUser(updates);
     setSession(s);
     setLoading(false);
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    await import('../service/authService').then(m => m.deleteAccount());
+    setSession(null);
+  }, []);
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, login, signup, logout, updateUser }}>
+    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, login, signup, logout, updateUser, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

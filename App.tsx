@@ -1,4 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { Alert } from 'react-native';
+import { setGlobalErrorHandler } from './fetcher/http';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -106,6 +109,11 @@ function RootNavigator() {
 }
 
 function Providers() {
+  useEffect(() => {
+    setGlobalErrorHandler((msg) => {
+      Alert.alert('Erro', msg);
+    });
+  }, []);
   return (
     <ThemeProvider>
       <AuthProvider>
