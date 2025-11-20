@@ -1,7 +1,6 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useWellbeingControl } from '../control/WellbeingControl';
 import { EntradaBemEstar } from '../model/wellbeing';
-import { useAuth } from './AuthContext';
-import { salvarCheckin, carregarCheckins } from '../service/checkinService';
 
 interface WellbeingValue {
   entries: EntradaBemEstar[];
@@ -9,40 +8,23 @@ interface WellbeingValue {
   simulate: () => void;
   refresh: () => void;
   clearAll: () => void;
+  loading: boolean;
+  error: string | null;
 }
 
-const WellbeingContext = createContext<WellbeingValue>({ entries: [], addCheckin: () => {}, simulate: () => {}, refresh: () => {}, clearAll: () => {} });
+const WellbeingContext = createContext<WellbeingValue | undefined>(undefined);
 
 export const WellbeingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { session } = useAuth();
-  const [entries, setEntries] = useState<EntradaBemEstar[]>([]);
-
-  const refresh = useCallback(() => {
-    if (!session) return;
-    carregarCheckins().then(setEntries).catch(() => {});
-  }, [session]);
-
-  useEffect(() => { refresh(); }, [refresh]);
-
-  const addCheckin = useCallback((data: Omit<EntradaBemEstar, 'id' | 'createdAt' | 'source' | 'userId'>) => {
-    if (!session) return;
-    salvarCheckin(data.mood, data.energy, data.focus)
-      .then(() => refresh())
-      .catch(() => {});
-  }, [session, refresh]);
-
-  const simulate = useCallback(() => {
-  }, []);
-
-  const clearAll = useCallback(() => {
-    refresh();
-  }, [refresh]);
-
+  const control = useWellbeingControl();
   return (
-    <WellbeingContext.Provider value={{ entries, addCheckin, simulate, refresh, clearAll }}>
+    <WellbeingContext.Provider value={control}>
       {children}
     </WellbeingContext.Provider>
   );
 };
 
-export const useWellbeing = () => useContext(WellbeingContext);
+export const useWellbeing = () => {
+  const ctx = useContext(WellbeingContext);
+  if (!ctx) throw new Error('useWellbeing deve ser usado dentro de WellbeingProvider');
+  return ctx;
+};

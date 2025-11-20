@@ -103,6 +103,8 @@ function RootNavigator() {
   );
 }
 
+import { UserProvider } from './contexto/UserContext';
+
 function Providers() {
   useEffect(() => {
     setGlobalErrorHandler((msg) => {
@@ -112,14 +114,16 @@ function Providers() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <WellbeingProvider>
-          <LogProvider>
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
-            <StatusBar style="light" />
-          </LogProvider>
-        </WellbeingProvider>
+        <UserProvider>
+          <WellbeingProvider>
+            <LogProvider>
+              <NavigationContainer>
+                <RootNavigator />
+              </NavigationContainer>
+              <StatusBar style="light" />
+            </LogProvider>
+          </WellbeingProvider>
+        </UserProvider>
       </AuthProvider>
     </ThemeProvider>
   );

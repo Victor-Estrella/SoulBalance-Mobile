@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import ScreenContainer from './components/ContainerTela';
 import { Text, View, Pressable, Alert, TextInput } from 'react-native';
 import { useWellbeing } from '../contexto/WellbeingContext';
-import { useAuth } from '../contexto/AuthContext';
+import { useUser } from '../contexto/UserContext';
 import { useTheme } from '../styles/ThemeContext';
 import PrimaryButton from './components/ui/PrimaryButton';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function PerfilConfiguracao() {
   const { entries } = useWellbeing();
-  const { session, updateUser, deleteAccount } = useAuth();
+  const { usuario, salvar, atualizar, deletar, loading, mensagem } = useUser();
   const { theme } = useTheme();
-  const [name, setName] = useState(session?.user.name ?? '');
-  const [email, setEmail] = useState(session?.user.email ?? '');
+  const [name, setName] = useState(usuario?.nome ?? '');
+  const [email, setEmail] = useState(usuario?.email ?? '');
   const [senha, setSenha] = useState('');
 
   // Perfil evolutivo
@@ -34,12 +34,12 @@ export default function PerfilConfiguracao() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!session) return;
+    if (!usuario?.userId) return;
     Alert.alert('Excluir conta', 'Tem certeza que deseja excluir sua conta? Esta ação é irreversível.', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Excluir', style: 'destructive', onPress: async () => {
         try {
-          await deleteAccount();
+          await deletar(String(usuario.userId));
         } catch (e) {
           Alert.alert('Erro', 'Não foi possível excluir a conta.');
         }
@@ -58,7 +58,7 @@ export default function PerfilConfiguracao() {
               {interp.status_curto?.toUpperCase()}
             </Text>
           </View>
-          <Text style={{ color: theme.colors.textSecondary }}>{session?.user.name}</Text>
+          <Text style={{ color: theme.colors.textSecondary }}>{usuario?.nome}</Text>
         </View>
         <Text style={{ color: theme.colors.textPrimary }}>{interp.mensagem}</Text>
         {interp.competencias.length > 0 && (
@@ -96,14 +96,18 @@ export default function PerfilConfiguracao() {
         <TextInput value={name} onChangeText={setName} placeholder="Nome" placeholderTextColor={theme.colors.textSecondary} style={{ marginTop: theme.spacing(1), backgroundColor: theme.colors.surfaceAlt, color: theme.colors.textPrimary, padding: theme.spacing(1), borderRadius: theme.radius.md }} />
         <TextInput value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="Email" placeholderTextColor={theme.colors.textSecondary} style={{ marginTop: theme.spacing(1), backgroundColor: theme.colors.surfaceAlt, color: theme.colors.textPrimary, padding: theme.spacing(1), borderRadius: theme.radius.md }} />
         <TextInput value={senha} onChangeText={setSenha} placeholder="Senha (obrigatória para atualizar)" placeholderTextColor={theme.colors.textSecondary} secureTextEntry style={{ marginTop: theme.spacing(1), backgroundColor: theme.colors.surfaceAlt, color: theme.colors.textPrimary, padding: theme.spacing(1), borderRadius: theme.radius.md }} />
-        <PrimaryButton title="Salvar perfil" variant="solid" onPress={async () => {
+        <PrimaryButton title={loading ? 'Salvando...' : 'Salvar perfil'} variant="solid" onPress={async () => {
           if (!senha) {
             Alert.alert('Atenção', 'Informe sua senha para atualizar o perfil.');
             return;
           }
+          if (!usuario?.userId) {
+            Alert.alert('Erro', 'Usuário não encontrado.');
+            return;
+          }
           try {
-            await updateUser({ name, email, senha });
-            Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+            const result = await atualizar(String(usuario.userId), { name, email, senha });
+            Alert.alert(result.sucesso ? 'Sucesso' : 'Erro', result.mensagem);
           } catch (e: any) {
             Alert.alert('Erro', e?.message || 'Não foi possível atualizar o perfil.');
           }
