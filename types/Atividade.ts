@@ -1,10 +1,9 @@
-export type TipoAtividade = 'TRABALHO_FOCO' | 'TRABALHO_CRIATIVO' | 'ESTUDO_APRENDIZADO' | 'PAUSA_ATIVA' | 'DESCANSO_PASSIVO' | 'LAZER_SOCIAL' | 'MEDITACAO_MINDFULNESS' | 'EXERCICIO_FISICO';
+// O tipo TipoAtividade agora é importado do model/atividade.ts como enum
 
 export interface AtividadeRequest {
     tipoAtividade: TipoAtividade;
-    inicio: string;
-    fim: string;    
     descricao: string;
+    durationMinutes: number;
 }
 
 export interface AtividadeResponse {

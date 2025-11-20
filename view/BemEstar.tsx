@@ -9,7 +9,7 @@ import LevelChips from './components/ui/LevelChips';
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 export default function BemEstar() {
-  const { entries, addCheckin, simulate } = useWellbeing();
+  const { entries, addCheckin } = useWellbeing();
   const { theme } = useTheme();
   const [mood, setMood] = useState<number>(3);
   const [energy, setEnergy] = useState<number>(3);
@@ -42,12 +42,15 @@ export default function BemEstar() {
 
         <View style={{ height: theme.spacing(1.5) }} />
         <PrimaryButton variant="solid" title="Salvar check-in" onPress={() => addCheckin({ mood, energy, focus })} />
-        <View style={{ height: theme.spacing(1) }} />
-        <PrimaryButton variant="outline" title="Simular sensores" onPress={simulate} />
       </View>
 
       <Text style={{ color: theme.colors.textSecondary, marginVertical: theme.spacing(2) }}>Últimos check-ins</Text>
-      {entries.slice(0, 10).map((e) => {
+      {[...entries].sort((a, b) => {
+        // Ordena do mais recente para o mais antigo
+        const da = new Date(a.createdAt).getTime();
+        const db = new Date(b.createdAt).getTime();
+        return db - da;
+      }).slice(0, 10).map((e) => {
         const moodLabel = (n: number) => ['Péssimo', 'Ruim', 'Ok', 'Bem', 'Ótimo'][n - 1] || '—';
         const moodIcon = (n: number) =>
           [
@@ -100,7 +103,26 @@ export default function BemEstar() {
             </View>
 
             <Text style={{ color: theme.colors.textSecondary, fontSize: theme.typography.sizes.xs }}>
-              {new Date(e.createdAt).toLocaleTimeString()}
+              {(() => {
+                let dateStr = e.createdAt;
+                // Se vier com 'Z', trata como UTC e exibe UTC
+                if (dateStr && dateStr.endsWith('Z')) {
+                  const d = new Date(dateStr);
+                  return isNaN(d.getTime()) ? '-' : d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+                }
+                // Se vier com milissegundos, remove
+                if (dateStr && dateStr.includes('.')) dateStr = dateStr.split('.')[0];
+                // Se vier sem 'Z', monta como local mas exibe UTC
+                if (dateStr) {
+                  const [datePart, timePart] = dateStr.split('T');
+                  if (!datePart || !timePart) return '-';
+                  const [year, month, day] = datePart.split('-').map(Number);
+                  const [hour, min, sec] = timePart.split(':').map(Number);
+                  const d = new Date(Date.UTC(year, month - 1, day, hour, min, sec));
+                  return isNaN(d.getTime()) ? '-' : d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+                }
+                return '-';
+              })()}
             </Text>
           </View>
         );
