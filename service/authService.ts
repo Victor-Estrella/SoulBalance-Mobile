@@ -23,6 +23,7 @@ export async function signup(name: string, email: string, password: string): Pro
 }
 
 export async function login(email: string, password: string): Promise<AuthSession> {
+  try {
     // Faz login e busca o usuário pelo email para obter o id
     const loginResult = await postLogin({ email, password });
     await setToken(loginResult.token);
@@ -31,8 +32,10 @@ export async function login(email: string, password: string): Promise<AuthSessio
     try {
       usuario = await buscarUsuarioPorEmail(email);
     } catch (e) {
-      // Se não encontrar, salva sessão sem id
       usuario = null;
+    }
+    if (!usuario) {
+      throw new Error('Conta não encontrada. Verifique o email ou cadastre-se.');
     }
     const session: AuthSession = {
       token: loginResult.token,
@@ -46,6 +49,11 @@ export async function login(email: string, password: string): Promise<AuthSessio
     };
     await storage.setItem(SESSION_KEY, JSON.stringify(session));
     return session;
+  } catch (err: any) {
+    if (err?.message?.includes('Conta não encontrada')) throw err;
+    if (err?.response?.status === 401) throw new Error('Senha incorreta.');
+    throw new Error('Erro ao fazer login. Tente novamente.');
+  }
 }
 
 export async function getSession(): Promise<AuthSession | null> {

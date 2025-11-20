@@ -19,6 +19,7 @@ import Wellbeing from './view/BemEstar';
 import Logger from './view/RegistroHoras';
 import Recommendations from './view/Recomendacoes';
 import Configuracao from './view/Configuracao';
+import SobreApp from './view/SobreApp';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -77,6 +78,10 @@ function AppTabs() {
 
       <Tab.Screen name="Perfil" options={makeOptions('Perfil', 'Perfil', { type: 'feather', name: 'user' })}>
         {(navProps: any) => <Configuracao {...navProps} />}
+      </Tab.Screen>
+
+      <Tab.Screen name="Sobre" options={makeOptions('Sobre o App', 'Sobre', { type: 'mci', name: 'information' })}>
+        {(navProps: any) => <SobreApp {...navProps} />}
       </Tab.Screen>
     </Tab.Navigator>
   );

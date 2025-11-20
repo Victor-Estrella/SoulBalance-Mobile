@@ -38,9 +38,7 @@ export async function salvarCheckin(mood: number, energy: number, focus: number)
         energia: scoreToEnum(energy),
         foco: scoreToEnum(focus),
     };
-    console.log('[checkinService] salvarCheckin - body:', body);
     const dto = await postCheckinManual(body);
-    console.log('[checkinService] salvarCheckin - dto:', dto);
     return mapCheckinToEntry(dto);
 }
 

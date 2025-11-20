@@ -10,6 +10,7 @@ type Props = { goSignup: () => void; onLogged: () => void };
 
 export default function Login({ goSignup, onLogged }: Props) {
   const { login, loading, session } = useAuth();
+  const [loginError, setLoginError] = useState<string | null>(null);
   const { theme } = useTheme();
   const [email, setEmail] = useState('demo@soul.app');
   const [password, setPassword] = useState('123456');
@@ -20,15 +21,25 @@ export default function Login({ goSignup, onLogged }: Props) {
       <View style={{ backgroundColor: theme.colors.surface, padding: theme.spacing(2), borderRadius: theme.radius.lg }}>
         <FormField label="Email" value={email} onChange={setEmail} placeholder="seu@email.com" keyboardType="email-address" icon="mail" error={errors.email} />
         <FormField label="Senha" value={password} onChange={setPassword} placeholder="••••••" secure icon="lock" error={errors.password} />
+        {loginError && (
+          <Text style={{ color: theme.colors.danger, marginBottom: theme.spacing(1) }}>{loginError}</Text>
+        )}
         <PrimaryButton
           variant="gradient"
           title={loading ? 'Entrando...' : 'Entrar'}
-          onPress={() => {
+          onPress={async () => {
             const next: any = {};
+            setLoginError(null);
             if (!email.includes('@')) next.email = 'Email inválido';
             if (password.length < 6) next.password = 'Use ao menos 6 caracteres';
             setErrors(next);
-            if (Object.keys(next).length === 0) login(email, password);
+            if (Object.keys(next).length === 0) {
+              try {
+                await login(email, password);
+              } catch (e: any) {
+                setLoginError(e?.message || 'Erro ao fazer login.');
+              }
+            }
           }}
         />
         <TouchableOpacity accessibilityRole="button" onPress={goSignup} style={{ marginTop: theme.spacing(2), alignSelf: 'center' }}>

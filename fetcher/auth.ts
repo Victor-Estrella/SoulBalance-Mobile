@@ -11,7 +11,6 @@ export async function postSignup(data: SignupRequest): Promise<UsuarioResponse> 
     senha: data.password,
   };
   delete payload.password;
-  console.log('Enviando dados para cadastro:', payload);
   try {
     const res = await api.post<UsuarioResponse>('/usuarios', payload);
     return res.data;

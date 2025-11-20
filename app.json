@@ -28,6 +28,12 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d39a1aab-54b5-48eb-a52f-2f7f0f88965c"
+      }
+    },
+    "owner": "manooke"
   }
 }

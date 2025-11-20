@@ -1,3 +1,35 @@
+// Estilos para a tela SobreApp
+export const sobreAppStyles = (theme: typeof import('./theme').theme) => ({
+  container: {
+    flexGrow: 1,
+    padding: 24,
+    alignItems: 'flex-start' as const,
+    justifyContent: 'flex-start' as const,
+    backgroundColor: theme.colors.background,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold' as const,
+    marginBottom: 24,
+    color: theme.colors.accent,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    marginTop: 16,
+    color: theme.colors.textSecondary,
+  },
+  value: {
+    fontSize: 16,
+    marginTop: 4,
+    color: theme.colors.textPrimary,
+  },
+  repo: {
+    fontSize: 16,
+    marginTop: 4,
+    color: theme.colors.accent,
+  },
+});
 export const palette = {
   black: '#1A1A1A',
   blue: '#0066CC',
