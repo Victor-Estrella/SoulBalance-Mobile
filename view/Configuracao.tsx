@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import ScreenContainer from './components/ContainerTela';
 import { Text, View, Pressable, Alert, TextInput } from 'react-native';
 import { useWellbeing } from '../contexto/WellbeingContext';
-import { useUser } from '../contexto/UserContext';
+import { useAuth } from '../contexto/AuthContext';
 import { useTheme } from '../styles/ThemeContext';
 import PrimaryButton from './components/ui/PrimaryButton';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
-export default function PerfilConfiguracao() {
+export default function Configuracao() {
   const { entries } = useWellbeing();
-  const { usuario, salvar, atualizar, deletar, loading, mensagem } = useUser();
+  const { session, updateUser, deleteAccount, loading } = useAuth();
   const { theme } = useTheme();
-  const [name, setName] = useState(usuario?.nome ?? '');
-  const [email, setEmail] = useState(usuario?.email ?? '');
+  const [name, setName] = useState(session?.user.name ?? '');
+  const [email, setEmail] = useState(session?.user.email ?? '');
   const [senha, setSenha] = useState('');
 
   // Perfil evolutivo
@@ -34,12 +34,12 @@ export default function PerfilConfiguracao() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!usuario?.userId) return;
+    if (!session) return;
     Alert.alert('Excluir conta', 'Tem certeza que deseja excluir sua conta? Esta ação é irreversível.', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Excluir', style: 'destructive', onPress: async () => {
         try {
-          await deletar(String(usuario.userId));
+          await deleteAccount();
         } catch (e) {
           Alert.alert('Erro', 'Não foi possível excluir a conta.');
         }
@@ -58,7 +58,7 @@ export default function PerfilConfiguracao() {
               {interp.status_curto?.toUpperCase()}
             </Text>
           </View>
-          <Text style={{ color: theme.colors.textSecondary }}>{usuario?.nome}</Text>
+          <Text style={{ color: theme.colors.textSecondary }}>{session?.user.name}</Text>
         </View>
         <Text style={{ color: theme.colors.textPrimary }}>{interp.mensagem}</Text>
         {interp.competencias.length > 0 && (
@@ -101,13 +101,9 @@ export default function PerfilConfiguracao() {
             Alert.alert('Atenção', 'Informe sua senha para atualizar o perfil.');
             return;
           }
-          if (!usuario?.userId) {
-            Alert.alert('Erro', 'Usuário não encontrado.');
-            return;
-          }
           try {
-            const result = await atualizar(String(usuario.userId), { name, email, senha });
-            Alert.alert(result.sucesso ? 'Sucesso' : 'Erro', result.mensagem);
+            await updateUser({ name, email, senha });
+            Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
           } catch (e: any) {
             Alert.alert('Erro', e?.message || 'Não foi possível atualizar o perfil.');
           }

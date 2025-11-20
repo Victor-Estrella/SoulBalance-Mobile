@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { AuthSession, User } from '../model/user';
-import { login as doLogin, signup as doSignup, logout as doLogout, getSession } from '../service/authService';
+import { login as doLogin, signup as doSignup, logout as doLogout, getSession, updateUser as doUpdateUser, deleteAccount as doDeleteAccount } from '../service/authService';
 
 interface AuthContextValue {
   session: AuthSession | null;
@@ -9,6 +9,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (updates: { name?: string; email?: string; senha?: string }) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -18,6 +20,8 @@ const AuthContext = createContext<AuthContextValue>({
   login: async () => {},
   signup: async () => {},
   logout: async () => {},
+  updateUser: async () => {},
+  deleteAccount: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -49,8 +53,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
 
+  const updateUser = useCallback(async (updates: { name?: string; email?: string; senha?: string }) => {
+    setLoading(true);
+    const s = await doUpdateUser(updates);
+    setSession(s);
+    setLoading(false);
+  }, []);
+
+  const deleteAccount = useCallback(async () => {
+    await doDeleteAccount();
+    setSession(null);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, login, signup, logout, updateUser, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

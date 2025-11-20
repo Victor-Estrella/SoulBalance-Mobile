@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { UsuarioRequest, UsuarioResponse } from '../types/Usuario';
-import { userServiceSalvar, userServiceAtualizar, userServiceDeletar } from '../service/userService';
+import { userServiceSalvar, userServiceAtualizar, userServiceDeletar, userServiceBuscarPorEmail } from '../service/userService';
+import { UpdateUserRequest } from '../types/Auth';
 
 export function useUserControl() {
   const [usuario, setUsuario] = useState<UsuarioResponse | null>(null);
@@ -13,7 +14,9 @@ export function useUserControl() {
     const req: UsuarioRequest = { name: nome, email, senha };
     try {
       const res = await userServiceSalvar(req);
-      setUsuario(res);
+      // Busca usuário por email para garantir userId correto
+      const usuarioCompleto = await userServiceBuscarPorEmail(email);
+      setUsuario(usuarioCompleto);
       setMensagem('Usuário criado com sucesso.');
       return true;
     } catch (err) {
@@ -24,12 +27,14 @@ export function useUserControl() {
     }
   };
 
-  const atualizar = async (idUsuario: string, req: UsuarioRequest) => {
+  const atualizar = async (idUsuario: string, req: UpdateUserRequest) => {
     setLoading(true);
     setMensagem(null);
     try {
       const res = await userServiceAtualizar(idUsuario, req);
-      setUsuario(res);
+      // Busca usuário atualizado por email para garantir userId correto
+      const usuarioCompleto = await userServiceBuscarPorEmail(res.email);
+      setUsuario(usuarioCompleto);
       const ok = 'Dados atualizados com sucesso.';
       setMensagem(ok);
       return { sucesso: true, mensagem: ok };
@@ -50,6 +55,7 @@ export function useUserControl() {
       setUsuario(null);
       setMensagem('Usuário deletado com sucesso.');
     } catch (err) {
+      setUsuario(null);
       setMensagem('Erro ao deletar usuário.');
     } finally {
       setLoading(false);
