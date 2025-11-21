@@ -1,4 +1,3 @@
-
 import { api } from './http';
 import { LoginRequest, SignupRequest, UpdateUserRequest } from '../types/Auth';
 import { UsuarioResponse } from '../types/Usuario';

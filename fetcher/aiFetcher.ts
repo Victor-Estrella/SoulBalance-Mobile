@@ -1,26 +1,7 @@
-// Fetcher layer: only network calls related to AI backend
-export interface AiRequestPayload {
-  recoveryStatus: number; // 0-10
-  perceivedFatigue: number; // 0-10
-  focusLevel: number; // 0-10
-  sleepHours: number; // últimas horas de sono
-  mainTask: string; // descrição da tarefa principal
-}
+import axios from 'axios';
+import { AiAdjustmentResponse, AiRequestPayload } from '../types/IA';
 
-export interface AiAdjustmentResponse {
-  diagnostico: string;
-  ajusteCarga?: string;
-  recomendacoesAutocuidado: string[];
-  planoDia?: { titulo: string; duracaoMin?: number; tipo: string; detalhes?: string }[];
-  rawText?: string;
-  retries?: number;
-  error?: string;
-}
-
-// Base URL fixo para a API da IA (ajuste para o seu domínio da Vercel, se necessário)
 const BASE_URL = 'https://soul-balance-python.vercel.app';
-// O endpoint na Vercel pode levar >30s em cold start;
-// aumentamos o timeout do cliente para evitar AbortError prematuro.
 const TIMEOUT_MS = 60000;
 
 export async function postAjusteIA(payload: AiRequestPayload): Promise<AiAdjustmentResponse> {
@@ -28,31 +9,19 @@ export async function postAjusteIA(payload: AiRequestPayload): Promise<AiAdjustm
   let lastError: any;
   const maxRetries = 2;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const controller = new AbortController();
-    const to = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    const started = Date.now();
     try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
+      const res = await axios.post(endpoint, payload, {
+        timeout: TIMEOUT_MS,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: controller.signal
+        validateStatus: () => true
       });
-      clearTimeout(to);
-      if (!res.ok) {
-        const errBody = await res.text().catch(() => '');
-        throw new Error(`HTTP ${res.status} :: ${errBody.slice(0, 280)}`);
+      if (res.status < 200 || res.status >= 300) {
+        throw new Error(`HTTP ${res.status} :: ${typeof res.data === 'string' ? res.data.slice(0, 280) : JSON.stringify(res.data).slice(0, 280)}`);
       }
-      const contentType = (res.headers.get('content-type') || '').toLowerCase();
-      if (contentType.includes('application/json')) {
-        try {
-          const json = await res.json();
-          return { ...json, retries: attempt };
-        } catch (e) {
-          // continua para parse texto
-        }
+      if (typeof res.data === 'object') {
+        return { ...res.data, retries: attempt };
       }
-      const text = await res.text();
+      const text = typeof res.data === 'string' ? res.data : JSON.stringify(res.data);
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
@@ -72,13 +41,9 @@ export async function postAjusteIA(payload: AiRequestPayload): Promise<AiAdjustm
       }
       return { diagnostico, ajusteCarga, recomendacoesAutocuidado, rawText: text, retries: attempt };
     } catch (e: any) {
-      clearTimeout(to);
       lastError = e;
-      const elapsed = Date.now() - started;
-      const isAbort = e?.name === 'AbortError';
       const isServerProbable = /HTTP 5|HTTP 4(0|3|4|9)/.test(String(e?.message));
-      const shouldRetry = attempt < maxRetries && (isAbort || isServerProbable);
-      console.warn(`[AI Fetch Attempt ${attempt} Failed]`, e?.message, `elapsed=${elapsed}ms retry=${shouldRetry}`);
+      const shouldRetry = attempt < maxRetries && isServerProbable;
       if (!shouldRetry) break;
       await new Promise(r => setTimeout(r, 800 * (attempt + 1))); // backoff simples
     }
