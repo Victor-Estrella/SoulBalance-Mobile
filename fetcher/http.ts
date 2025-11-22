@@ -10,7 +10,6 @@ export function setGlobalErrorHandler(fn: (msg: string) => void) { showGlobalErr
 
 export const api = axios.create({
   baseURL: 'https://soulbalance-api.onrender.com',
-  timeout: 10000,
 });
 
 // Interceptor para adicionar o token JWT no header Authorization
@@ -35,8 +34,12 @@ api.interceptors.response.use(
   },
   (err) => {
     let customMsg = '';
+    // Network Error (API está ligando ou offline)
+    if (err?.message && err.message.includes('Network Error')) {
+      customMsg = 'A API está iniciando. Por favor, aguarde alguns minutos e tente novamente.';
+    }
     // Oracle constraint violation
-    if (err?.response?.data && typeof err.response.data === 'string' && err.response.data.includes('ORA-02290')) {
+    else if (err?.response?.data && typeof err.response.data === 'string' && err.response.data.includes('ORA-02290')) {
       customMsg = 'Algum valor enviado está fora do permitido. Verifique os campos e tente novamente.';
     }
     // Unauthorized
@@ -45,7 +48,7 @@ api.interceptors.response.use(
     }
     // Forbidden
     else if (err?.response?.status === 403) {
-      customMsg = 'Você não tem permissão para exec/utar esta ação.';
+      customMsg = 'Você não tem permissão para executar esta ação.';
     }
     // Validation error (Spring)
     else if (err?.response?.data && typeof err.response.data === 'string' && err.response.data.includes('validation')) {
