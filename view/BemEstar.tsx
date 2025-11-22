@@ -9,7 +9,10 @@ import LevelChips from './components/ui/LevelChips';
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 export default function BemEstar() {
-  const { entries, addCheckin } = useWellbeing();
+  const { entries, addCheckin, refresh } = useWellbeing();
+  React.useEffect(() => {
+    if (refresh) refresh();
+  }, [refresh]);
   const { theme } = useTheme();
   const [mood, setMood] = useState<number>(3);
   const [energy, setEnergy] = useState<number>(3);

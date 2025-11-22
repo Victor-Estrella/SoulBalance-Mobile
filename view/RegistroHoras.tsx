@@ -8,7 +8,10 @@ import { Feather } from '@expo/vector-icons';
 import { TipoAtividade } from '../model/atividade';
 
 export default function RegistroHoras() {
-  const { addEntry, entries, totalWork, byType } = useLogs();
+  const { addEntry, entries, totalWork, byType, refresh } = useLogs();
+  React.useEffect(() => {
+    refresh();
+  }, [refresh]);
   const { theme } = useTheme();
   const [task, setTask] = useState('Tarefa');
   const [duration, setDuration] = useState('30');
@@ -52,24 +55,24 @@ export default function RegistroHoras() {
       }).slice(0, 10).map(l => (
         <View key={l.id} style={{ padding: theme.spacing(1), marginBottom: theme.spacing(1), backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radius.sm }}>
           <Text style={{ color: theme.colors.textPrimary }}>{l.task} • {l.durationMinutes}m • {l.type}</Text>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: theme.typography.sizes.xs }}>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: theme.typography.sizes.xs, textAlign: 'center' }}>
             {(() => {
               let dateStr = l.createdAt;
-              if (!dateStr) return '-';
+              if (!dateStr) return '';
               // Se vier com 'Z', trata como UTC e exibe UTC
               if (dateStr.endsWith('Z')) {
                 const d = new Date(dateStr);
-                return isNaN(d.getTime()) ? '-' : d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+                return isNaN(d.getTime()) ? '' : d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
               }
               // Se vier com milissegundos, remove
               if (dateStr.includes('.')) dateStr = dateStr.split('.')[0];
               // Se vier sem 'Z', monta como local mas exibe UTC
               const [datePart, timePart] = dateStr.split('T');
-              if (!datePart || !timePart) return '-';
+              if (!datePart || !timePart) return '';
               const [year, month, day] = datePart.split('-').map(Number);
               const [hour, min, sec] = timePart.split(':').map(Number);
               const d = new Date(Date.UTC(year, month - 1, day, hour, min, sec));
-              return isNaN(d.getTime()) ? '-' : d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+              return isNaN(d.getTime()) ? '' : d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
             })()}
           </Text>
         </View>

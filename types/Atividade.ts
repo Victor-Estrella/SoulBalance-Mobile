@@ -1,9 +1,9 @@
-// O tipo TipoAtividade agora é importado do model/atividade.ts como enum
-
 export interface AtividadeRequest {
     tipoAtividade: TipoAtividade;
+    inicio: string; // ISO string
+    fim: string;    // ISO string
     descricao: string;
-    durationMinutes: number;
+    email: string;
 }
 
 export interface AtividadeResponse {

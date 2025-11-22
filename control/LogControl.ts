@@ -17,14 +17,8 @@ export function useLogControl() {
     setLoading(true);
     setError(null);
     try {
-      const now = new Date();
-      const inicio = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-      const fim = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const formatDate = (dt: Date) => dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()) + 'T' + pad(dt.getHours()) + ':' + pad(dt.getMinutes()) + ':' + pad(dt.getSeconds());
-      const inicioStr = formatDate(inicio);
-      const fimStr = formatDate(fim);
-      const atividades = await carregarAtividadesPeriodo(inicioStr, fimStr);
+      // Busca histórico do usuário logado
+      const atividades = await require('../service/atividadeService').carregarHistoricoUsuario(Number(session.user.id));
       const mapped: RegistroTrabalho[] = atividades.map(a => ({
         id: String(a.atividadeId),
         userId: String(a.usuarioId),
@@ -53,10 +47,18 @@ export function useLogControl() {
     setLoading(true);
     setError(null);
     try {
+      // Monta datas de início e fim
+      const now = new Date();
+      const inicio = now.toISOString();
+      // Calcula fim baseado na duração informada
+      const fimDate = new Date(now.getTime() + (data.durationMinutes ?? 0) * 60000);
+      const fim = fimDate.toISOString();
       const payload = {
         tipoAtividade: data.type as any,
+        inicio,
+        fim,
         descricao: data.task,
-        durationMinutes: data.durationMinutes,
+        email: session.user.email,
       };
       await salvarAtividade(payload);
       await refresh();
