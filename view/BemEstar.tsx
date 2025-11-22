@@ -9,7 +9,7 @@ import LevelChips from './components/ui/LevelChips';
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 export default function BemEstar() {
-  const { entries, addCheckin, refresh } = useWellbeing();
+  const { entries, addCheckin, refresh, loading, error } = useWellbeing();
   React.useEffect(() => {
     if (refresh) refresh();
   }, [refresh]);
@@ -19,6 +19,15 @@ export default function BemEstar() {
   const [focus, setFocus] = useState<number>(3);
   return (
     <ScreenContainer title="Bem-estar">
+      {loading && (
+        <View style={{ alignItems: 'center', marginVertical: 16 }}>
+          <Text style={{ color: theme.colors.accent, marginBottom: 8 }}>Salvando check-in...</Text>
+          <Feather name="loader" size={32} color={theme.colors.accent} />
+        </View>
+      )}
+      {error && (
+        <Text style={{ color: theme.colors.danger, marginBottom: 8 }}>{error}</Text>
+      )}
       <Text style={{ color: theme.colors.textSecondary, marginBottom: theme.spacing(1) }}>Novo Check-in</Text>
 
       <View style={{ padding: theme.spacing(1.5), backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, marginBottom: theme.spacing(1.5) }}>

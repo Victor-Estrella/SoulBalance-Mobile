@@ -10,6 +10,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 export default function Configuracao() {
   const { entries } = useWellbeing();
   const { session, updateUser, deleteAccount, loading } = useAuth();
+  const [deleting, setDeleting] = useState(false);
   const { theme } = useTheme();
   const [name, setName] = useState(session?.user.name ?? '');
   const [email, setEmail] = useState(session?.user.email ?? '');
@@ -44,10 +45,13 @@ export default function Configuracao() {
     Alert.alert('Excluir conta', 'Tem certeza que deseja excluir sua conta? Esta ação é irreversível.', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Excluir', style: 'destructive', onPress: async () => {
+        setDeleting(true);
         try {
           await deleteAccount();
         } catch (e) {
           Alert.alert('Erro', 'Não foi possível excluir a conta.');
+        } finally {
+          setDeleting(false);
         }
       } }
     ]);
@@ -55,6 +59,12 @@ export default function Configuracao() {
 
   return (
     <ScreenContainer title="Perfil & Configurações" subtitle="Seu retrato comportamental e dados">
+      {deleting && (
+        <View style={{ alignItems: 'center', marginVertical: 16 }}>
+          <Text style={{ color: theme.colors.danger, marginBottom: 8 }}>Excluindo conta...</Text>
+          <Feather name="loader" size={32} color={theme.colors.danger} />
+        </View>
+      )}
       {/* Status interpretado */}
       <View style={{ backgroundColor: theme.colors.surface, padding: theme.spacing(2), borderRadius: theme.radius.lg, marginBottom: theme.spacing(2) }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: theme.spacing(1) }}>

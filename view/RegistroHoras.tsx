@@ -8,7 +8,7 @@ import { Feather } from '@expo/vector-icons';
 import { TipoAtividade } from '../model/atividade';
 
 export default function RegistroHoras() {
-  const { addEntry, entries, totalWork, byType, refresh } = useLogs();
+  const { addEntry, entries, totalWork, byType, refresh, loading, error } = useLogs();
   React.useEffect(() => {
     refresh();
   }, [refresh]);
@@ -23,6 +23,15 @@ export default function RegistroHoras() {
   ];
   return (
     <ScreenContainer title="Registro de Horas">
+      {loading && (
+        <View style={{ alignItems: 'center', marginVertical: 16 }}>
+          <Text style={{ color: theme.colors.accent, marginBottom: 8 }}>Salvando registro...</Text>
+          <Feather name="loader" size={32} color={theme.colors.accent} />
+        </View>
+      )}
+      {error && (
+        <Text style={{ color: theme.colors.danger, marginBottom: 8 }}>{error}</Text>
+      )}
       <Text style={{ color: theme.colors.textSecondary }}>Novo registro</Text>
       <View style={{ backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, padding: theme.spacing(1.5), marginVertical: theme.spacing(1) }}>
         <TextInput value={task} onChangeText={setTask} style={{ backgroundColor: theme.colors.surfaceAlt, color: theme.colors.textPrimary, padding: theme.spacing(1), borderRadius: theme.radius.sm, marginBottom: theme.spacing(1) }} placeholder="Tarefa" placeholderTextColor={theme.colors.textSecondary} />
