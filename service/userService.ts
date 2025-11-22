@@ -10,7 +10,6 @@ export async function userServiceSalvar(req: UsuarioRequest): Promise<UsuarioRes
   return await postSignup({ name: req.name, email: req.email, password: req.senha });
 }
 
-// Atualização de usuário
 // Atualiza usuário, buscando id por email se necessário e atualizando storage local
 export async function userServiceAtualizar(idUsuario: string, req: UpdateUserRequest): Promise<UsuarioResponse> {
   // Busca sessão local para garantir id correto
@@ -46,7 +45,8 @@ export async function userServiceAtualizar(idUsuario: string, req: UpdateUserReq
     return updatedUser;
   } else {
     // fallback: só faz update
-    return await postUpdateUser(String(userId), req);
+    const updatedUser = await postUpdateUser(String(userId), req);
+    return updatedUser;
   }
 }
 

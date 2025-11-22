@@ -15,6 +15,12 @@ export default function Configuracao() {
   const [email, setEmail] = useState(session?.user.email ?? '');
   const [senha, setSenha] = useState('');
 
+  // Atualiza os campos do formulário quando o perfil mudar
+  React.useEffect(() => {
+    setName(session?.user.name ?? '');
+    setEmail(session?.user.email ?? '');
+  }, [session?.user.name, session?.user.email]);
+
   // Perfil evolutivo
   const total = entries.length;
   const avgMood = total ? (entries.reduce((a,b)=> a + b.mood,0)/ total).toFixed(2) : '0';
@@ -102,6 +108,7 @@ export default function Configuracao() {
             return;
           }
           try {
+            // Log do payload e id do usuário
             await updateUser({ name, email, senha });
             Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
           } catch (e: any) {

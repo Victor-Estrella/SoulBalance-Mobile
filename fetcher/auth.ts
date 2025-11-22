@@ -19,6 +19,12 @@ export async function postSignup(data: SignupRequest): Promise<UsuarioResponse> 
   }
 }
 
+// Busca dados completos do usuário por id
+export async function buscarUsuarioPorId(idUsuario: string | number): Promise<UsuarioResponse> {
+  const res = await api.get<UsuarioResponse>(`/usuarios/${idUsuario}`);
+  return res.data;
+}
+
 // O backend espera o campo 'senha' (não 'password')
 export async function postLogin(data: LoginRequest): Promise<{ token: string }> {
   const payload = {
@@ -43,6 +49,7 @@ export async function postUpdateUser(userId: string, updates: UpdateUserRequest)
   const res = await api.put<UsuarioResponse>(`/usuarios/${userId}`, updates);
   return res.data;
 }
+
 export async function deleteUser(userId: string): Promise<void> {
   if (!userId) throw new Error('ID do usuário não informado para exclusão!');
   await api.delete(`/usuarios/${userId}`);

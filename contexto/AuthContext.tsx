@@ -60,6 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
   const updateUser = useCallback(async (updates: { name?: string; email?: string; senha?: string }) => {
+    if (!updates.senha || updates.senha.trim() === "") {
+      throw new Error("A senha é obrigatória para atualizar o perfil.");
+    }
     setLoading(true);
     const s = await doUpdateUser(updates);
     setSession(s);

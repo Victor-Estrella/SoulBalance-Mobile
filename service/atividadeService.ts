@@ -12,6 +12,5 @@ export async function salvarAtividade(data: AtividadeRequest): Promise<Atividade
 // Buscar histórico de atividades do usuário
 export async function carregarHistoricoUsuario(idUsuario: number): Promise<AtividadeResponse[]> {
     const result = await listarHistoricoUsuario(idUsuario);
-    console.log('GET /atividade/historico/', idUsuario, result);
     return result;
 }

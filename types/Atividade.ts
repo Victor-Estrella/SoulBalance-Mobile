@@ -1,3 +1,5 @@
+import { TipoAtividade } from "../model/atividade";
+
 export interface AtividadeRequest {
     tipoAtividade: TipoAtividade;
     inicio: string; // ISO string
