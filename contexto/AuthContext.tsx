@@ -34,9 +34,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(async (email: string, password: string) => {
     setLoading(true);
-    const s = await doLogin(email, password);
-    setSession(s);
-    setLoading(false);
+    try {
+      const s = await doLogin(email, password);
+      setSession(s);
+    } catch (e: any) {
+      // Repassa a mensagem de erro amigável para o componente
+      throw new Error(e?.message || 'Erro ao fazer login.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const signup = useCallback(async (name: string, email: string, password: string) => {

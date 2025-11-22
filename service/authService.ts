@@ -14,6 +14,12 @@ async function removeToken() { await AsyncStorage.removeItem(TOKEN_KEY); }
 
 const SESSION_KEY = 'session_v1';
 
+export async function getSession(): Promise<AuthSession | null> {
+  const stored = await AsyncStorage.getItem(SESSION_KEY);
+  if (!stored) return null;
+  return JSON.parse(stored);
+}
+
 // Novo fluxo: apenas cadastra o usuário, sem login automático
 export async function signup(name: string, email: string, password: string): Promise<UsuarioResponse> {
   // Cria o usuário (não retorna token)
@@ -24,41 +30,30 @@ export async function signup(name: string, email: string, password: string): Pro
 
 export async function login(email: string, password: string): Promise<AuthSession> {
   try {
-    // Faz login e busca o usuário pelo email para obter o id
+    // Faz login e salva o token
     const loginResult = await postLogin({ email, password });
     await setToken(loginResult.token);
-    // Busca o usuário pelo email para obter id, nome, etc
-    let usuario = null;
+    // Busca o usuário pelo email para obter o id real
+    let idUsuario = '';
     try {
-      usuario = await buscarUsuarioPorEmail(email);
-    } catch (e) {
-      usuario = null;
-    }
-    if (!usuario) {
-      throw new Error('Conta não encontrada. Verifique o email ou cadastre-se.');
-    }
+      const resp = await import('../fetcher/auth');
+      idUsuario = await resp.buscarUsuarioPorEmail(email);
+    } catch {}
     const session: AuthSession = {
       token: loginResult.token,
       user: {
-        id: usuario?.userId ? String(usuario.userId) : '',
-        name: usuario?.nome || '',
-        email: usuario?.email || email,
-        createdAt: usuario?.dataCriacao || '',
+        id: idUsuario ? String(idUsuario) : '',
+        name: '',
+        email: email,
+        createdAt: '',
       },
-      expiresAt: null,
+      expiresAt: '',
     };
-    await storage.setItem(SESSION_KEY, JSON.stringify(session));
+    await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(session));
     return session;
-  } catch (err: any) {
-    if (err?.message?.includes('Conta não encontrada')) throw err;
-    if (err?.response?.status === 401) throw new Error('Senha incorreta.');
-    throw new Error('Erro ao fazer login. Tente novamente.');
+  } catch (e: any) {
+    throw new Error(e?.message || 'Erro ao fazer login.');
   }
-}
-
-export async function getSession(): Promise<AuthSession | null> {
-  const stored = await storage.getItem(SESSION_KEY);
-  return stored ? JSON.parse(stored) : null;
 }
 
 export async function logout(): Promise<void> {

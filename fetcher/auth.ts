@@ -23,10 +23,19 @@ export async function postSignup(data: SignupRequest): Promise<UsuarioResponse> 
 export async function postLogin(data: LoginRequest): Promise<{ token: string }> {
   const payload = {
     email: data.email,
-    senha: (data as any).senha ?? data.password,
+    senha: data.password,
   };
-  const res = await api.post<{ token: string }>('/login', payload);
-  return res.data;
+  try {
+    const res = await api.post<{ token: string }>('/login', payload);
+    return res.data;
+  } catch (error: any) {
+    if (error?.response?.status === 400) {
+      console.error('[LOGIN] Erro 400:', error?.response?.data);
+      throw new Error('Conta não encontrada. Verifique o email ou cadastre');
+    }
+    console.error('Erro ao fazer login:', error);
+    throw error;
+  }
 }
 
 export async function postUpdateUser(userId: string, updates: UpdateUserRequest): Promise<UsuarioResponse> {
@@ -42,5 +51,6 @@ export async function deleteUser(userId: string): Promise<void> {
 // Busca usuário por email (garante compatibilidade com backend)
 export async function buscarUsuarioPorEmail(email: string) {
   const resp = await api.get('/usuarios/email', { params: { email } });
+  // O backend retorna apenas o id (número)
   return resp.data;
 }

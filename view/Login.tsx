@@ -37,7 +37,12 @@ export default function Login({ goSignup, onLogged }: Props) {
               try {
                 await login(email, password);
               } catch (e: any) {
-                setLoginError(e?.message || 'Erro ao fazer login.');
+                // Se for erro 400, mostra só a mensagem amigável
+                if (e?.message?.includes('Conta não encontrada')) {
+                  setLoginError('Conta não encontrada. Verifique o email ou cadastre-se.');
+                } else {
+                  setLoginError('Erro ao fazer login.');
+                }
               }
             }
           }}

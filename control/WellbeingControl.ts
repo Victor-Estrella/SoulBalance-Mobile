@@ -29,7 +29,10 @@ export function useWellbeingControl() {
     setError(null);
     try {
       await salvarCheckin(data.mood, data.energy, data.focus);
+      setError(null); // Limpa erro se sucesso
       await refresh();
+      // Após refresh, mantém só os 5 últimos vindos do backend
+      setEntries((prev) => prev.slice(0, 5));
     } catch (err) {
       setError('Erro ao salvar check-in');
     } finally {
