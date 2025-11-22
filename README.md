@@ -24,6 +24,7 @@ O SoulBalance é um aplicativo mobile que utiliza IA Generativa para promover au
 - Registro manual/automático de trabalho, descanso e lazer
 - Relatórios narrativos automáticos sobre a semana
 - Indicadores de hábitos sustentáveis para RH/mentoria
+- Feedback visual (loaders/spinners) durante operações de salvar, atualizar e excluir, garantindo experiência clara ao usuário
 
 **5. Perfil Evolutivo**
 - Perfil comportamental dinâmico
@@ -75,7 +76,7 @@ App.tsx             # Navegação raiz e ThemeProvider
 - React Navigation (Stack/Tab)
 - TypeScript
 - AsyncStorage
-- Axios
+- Axios (com tratamento de erros e feedback visual)
 - Firebase App Distribution (publicação)
 
 
@@ -103,12 +104,19 @@ Executar no navegador (web)
 npm run web
 ```
 
+
 Back-end
 - Endpoint padrão: `https://soulbalance-api.onrender.com` (ou seu servidor Java/.NET).
 - É possível sobrescrever via variável de ambiente (PowerShell):
 ```powershell
 $env:API_URL = "http://seu-servidor:8080"; npm run start
 ```
+
+## Experiência de Usuário
+
+- Todas operações de CRUD (Create, Read, Update, Delete) exibem feedback visual (loaders/spinners) durante requisições à API.
+- Mensagens de erro e sucesso são exibidas para garantir clareza ao usuário.
+- Exclusão de conta, check-in e registro de horas possuem tela de carregamento durante o processo.
 
 
 ## Publicação (Firebase App Distribution)
