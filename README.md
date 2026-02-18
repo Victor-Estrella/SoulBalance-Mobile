@@ -89,7 +89,7 @@ Pré‑requisitos
 
 Clonar e instalar
 ```powershell
-git clone https://github.com/AntonioCarvalhoFIAP/global-solution-2-Victor-Estrella.git
+git clone https://github.com/Victor-Estrella/SoulBalance-Mobile.git
 cd global-solution-2-Victor-Estrella
 npm install
 ```
